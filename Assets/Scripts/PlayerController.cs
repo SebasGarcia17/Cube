@@ -7,28 +7,33 @@ public class PlayerController : MonoBehaviour
     private float walkSpeed = 7f;
     private float turnSpeed = 200f;
     private float raycastLength = 1f;
-    public LayerMask Mask; // M醩cara de capa para el Raycast
+    public LayerMask Mask; // M谩scara de capa para el Raycast
     private Vector3 hitPoint; // Punto de impacto del Raycast
-    public Vector3 Forward = new Vector3(0, -1, 1); // Vector de direcci髇 hacia adelante
+    public Vector3 Forward = new Vector3(0, -1, 1); // Vector de direcci贸n hacia adelante
     public Vector3 forwardOffset = Vector3.zero; // Desplazamiento hacia adelante
     public Vector3 moveOffset = Vector3.zero; // Desplazamiento general
     public Vector3 backward = Vector3.zero;
-    private float spaceDistance = 0.045f;
+    private float spaceDistance = 0.1f;
 
 
     private Vector3 lastNormal = Vector3.zero;
 
     void Update()
     {
-        Movement(); // L骻ica de movimiento
+        Movement(); // L贸gica de movimiento
     }
 
     private void FixedUpdate()
     {
+        Physics.Raycast(transform.position, -transform.up, out RaycastHit hit, 3f);
+        Quaternion rotacion = Quaternion.LookRotation(hit.normal);
+        Debug.DrawRay(transform.position+transform.forward*1f,rotacion*Vector3.forward*3f,Color.blue);
+        Debug.DrawRay(transform.position+transform.forward*1f,rotacion*Vector3.up*3f,Color.green);
+        Debug.DrawRay(transform.position+transform.forward*1f,rotacion*Vector3.right*3f,Color.red);
         if (!CheckDirection(transform.position, Vector3.down))
         {
             Debug.Log("Entre");
-            Rotation(); // L骻ica de rotaci髇 si no hay suelo debajo
+            Rotation(); // L贸gica de rotaci贸n si no hay suelo debajo
             MoveToPosition(transform.position, Vector3.down);
 
         }
@@ -40,10 +45,10 @@ public class PlayerController : MonoBehaviour
         float horizontalInput = Input.GetAxis("Horizontal");
         float verticalInput = Input.GetAxis("Vertical");
 
-        // Movimiento hacia adelante/atr醩
+        // Movimiento hacia adelante/atr谩s
         transform.Translate(walkSpeed * Time.deltaTime * Vector3.forward * verticalInput);
 
-        // Rotaci髇 izquierda/derecha
+        // Rotaci贸n izquierda/derecha
         transform.Rotate(turnSpeed * Time.deltaTime * Vector3.up * horizontalInput);
 
     }
@@ -60,18 +65,26 @@ public class PlayerController : MonoBehaviour
         {
             Vector3 targetPosition = hitPoint.point + (transform.up * spaceDistance);
             transform.position = targetPosition;
-
+            
+            Quaternion rotacion = Quaternion.LookRotation(hitPoint.normal);
+            float angle =  Vector3.Angle(transform.up, rotacion * Vector3.forward); 
+            float signoAngle = Mathf.Sign(Vector3.SignedAngle(transform.up, rotacion * Vector3.forward, transform.forward)); 
+            
+            print($"hitpoint{hitPoint.normal}angle{angle}signoangle{signoAngle}");
+            Quaternion addRotation = Quaternion.Euler(0, 0,signoAngle*angle );
+            transform.rotation = transform.rotation * addRotation;
+            
             //transform.eulerAngles = new Vector3(transform.eulerAngles.x, transform.eulerAngles.y, 0f);
 
             //Vector3 targetDirection = hitPoint.normal;
 
-            // Calcular el 醤gulo en grados para el eje X
+            // Calcular el 谩ngulo en grados para el eje X
             // float anguloX = Mathf.Atan2(targetDirection.y, targetDirection.z) * Mathf.Rad2Deg;
 
-            // Calcular el 醤gulo en grados para el eje Y
+            // Calcular el 谩ngulo en grados para el eje Y
             // float anguloY = Mathf.Atan2(targetDirection.x, targetDirection.z) * Mathf.Rad2Deg;
 
-            // Calcular el 醤gulo en grados para el eje Z
+            // Calcular el 谩ngulo en grados para el eje Z
 
             // float anguloZ = Mathf.Atan2(targetDirection.y, targetDirection.x) * Mathf.Rad2Deg;
             // Quaternion rotationQuaternion = Quaternion.Euler(anguloX, anguloY, anguloZ);
@@ -85,6 +98,7 @@ public class PlayerController : MonoBehaviour
     {
         transform.Translate(moveOffset);
         transform.Rotate(Vector3.right * 90);
+        
 
     }
 
